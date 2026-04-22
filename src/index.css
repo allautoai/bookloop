@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #1A2332;
+  --color-navy-light: #2A364B;
+  --color-nou: #10B981; /* Green */
+  --color-com-a-nou: #3B82F6; /* Blue */
+  --color-bon-estat: #F59E0B; /* Yellow */
+  --color-acceptable: #6B7280; /* Gray */
+}
+
+@layer base {
+  body {
+    @apply bg-navy text-white font-sans antialiased min-h-screen;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
