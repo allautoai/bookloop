@@ -16,6 +16,7 @@ const categories = [
 export default function Home() {
   const [recentBooks, setRecentBooks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -30,8 +31,9 @@ export default function Home() {
         
         if (error) throw error
         if (data) setRecentBooks(data)
-      } catch (error) {
-        console.error('Error fetching books:', error)
+      } catch (err) {
+        console.error('Error fetching books:', err)
+        setError(err.message || 'An error occurred while fetching books.')
       } finally {
         setLoading(false)
       }
@@ -109,6 +111,11 @@ export default function Home() {
              {[...Array(4)].map((_, i) => (
                <div key={i} className="animate-pulse bg-[#2A364B] rounded-xl aspect-[3/4]"></div>
              ))}
+          </div>
+        ) : error ? (
+          <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-6 rounded-2xl text-center">
+            <h3 className="font-bold text-lg mb-2">Error loading books</h3>
+            <p>{error}</p>
           </div>
         ) : recentBooks.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

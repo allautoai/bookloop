@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import BookCard from '../components/BookCard'
 import FilterBar from '../components/FilterBar'
-import { Search } from 'lucide-react'
+import { Search, BookOpen } from 'lucide-react'
 
 export default function BookList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -11,6 +11,7 @@ export default function BookList() {
   const [books, setBooks] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -80,10 +81,13 @@ export default function BookList() {
         query = query.or(`titol.ilike.%${filters.search}%,autor.ilike.%${filters.search}%`)
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false })
+      const { data, fetchError } = await query.order('created_at', { ascending: false })
       
-      if (!error && data) {
+      if (fetchError) {
+        setError(fetchError.message)
+      } else if (data) {
         setBooks(data)
+        setError(null)
       }
       setLoading(false)
     }
@@ -146,6 +150,11 @@ export default function BookList() {
                {[...Array(6)].map((_, i) => (
                  <div key={i} className="animate-pulse bg-[#2A364B] rounded-xl aspect-[3/4]"></div>
                ))}
+            </div>
+          ) : error ? (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-6 rounded-2xl text-center">
+              <h3 className="font-bold text-lg mb-2">Error loading catalog</h3>
+              <p>{error}</p>
             </div>
           ) : books.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">

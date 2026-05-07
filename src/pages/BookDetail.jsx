@@ -10,6 +10,7 @@ export default function BookDetail() {
   const [category, setCategory] = useState(null)
   const [seller, setSeller] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -53,8 +54,9 @@ export default function BookDetail() {
           if (sellerData) setSeller(sellerData)
         }
         
-      } catch (error) {
-        console.error('Error fetching book details:', error)
+      } catch (err) {
+        console.error('Error fetching book details:', err)
+        setError(err.message || 'An error occurred while fetching book details.')
       } finally {
         setLoading(false)
       }
@@ -82,6 +84,20 @@ export default function BookDetail() {
     return (
       <div className="max-w-7xl mx-auto px-6 py-12 flex justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3B82F6]"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-6 rounded-2xl text-center max-w-2xl mx-auto">
+          <h3 className="font-bold text-lg mb-2">Error loading book details</h3>
+          <p>{error}</p>
+          <Link to="/books" className="inline-block mt-4 text-[#3B82F6] hover:underline">
+            Back to Catalog
+          </Link>
+        </div>
       </div>
     )
   }
