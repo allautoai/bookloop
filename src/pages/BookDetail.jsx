@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, User, MessageCircle, ShoppingCart, Check } from 'lucide-react'
+import { ArrowLeft, User, MessageCircle, ShoppingCart, Check, Loader2, Star } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useToast } from '../context/ToastContext'
 
 export default function BookDetail() {
   const { id } = useParams()
@@ -13,6 +14,7 @@ export default function BookDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { addToCart, isInCart } = useCart()
+  const { addToast } = useToast()
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -70,11 +72,11 @@ export default function BookDetail() {
   const getConditionBadge = (condition) => {
     switch (condition) {
       case 'nou':
-        return <span className="bg-[#10B981]/10 text-[#10B981] px-3 py-1 rounded-full text-sm font-medium border border-[#10B981]/20">Nou</span>
+        return <span className="bg-[#10B981]/10 text-[#10B981] px-3 py-1 rounded-full text-sm font-medium border border-[#10B981]/20">New</span>
       case 'com_a_nou':
-        return <span className="bg-[#3B82F6]/10 text-[#3B82F6] px-3 py-1 rounded-full text-sm font-medium border border-[#3B82F6]/20">Com a nou</span>
+        return <span className="bg-[#3B82F6]/10 text-[#3B82F6] px-3 py-1 rounded-full text-sm font-medium border border-[#3B82F6]/20">Like New</span>
       case 'bon_estat':
-        return <span className="bg-[#F59E0B]/10 text-[#F59E0B] px-3 py-1 rounded-full text-sm font-medium border border-[#F59E0B]/20">Bon estat</span>
+        return <span className="bg-[#F59E0B]/10 text-[#F59E0B] px-3 py-1 rounded-full text-sm font-medium border border-[#F59E0B]/20">Good</span>
       case 'acceptable':
         return <span className="bg-[#6B7280]/10 text-[#6B7280] px-3 py-1 rounded-full text-sm font-medium border border-[#6B7280]/20">Acceptable</span>
       default:
@@ -82,10 +84,15 @@ export default function BookDetail() {
     }
   }
 
+  const handleAddToCart = () => {
+    addToCart(book)
+    addToast('Added to cart!', 'success')
+  }
+
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-12 flex justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3B82F6]"></div>
+      <div className="max-w-7xl mx-auto px-6 py-24 flex justify-center">
+        <Loader2 className="w-12 h-12 text-[#3B82F6] animate-spin" />
       </div>
     )
   }
@@ -106,7 +113,7 @@ export default function BookDetail() {
 
   if (!book) return null
 
-  const formattedPrice = Number(book.preu).toLocaleString('ca-ES', {
+  const formattedPrice = Number(book.preu).toLocaleString('en-US', {
     style: 'currency',
     currency: 'EUR'
   })
@@ -181,7 +188,14 @@ export default function BookDetail() {
                     )}
                     <div>
                       <h4 className="font-bold">{seller.nom}</h4>
-                      <p className="text-sm text-gray-400">{seller.ubicacio || 'Location unavailable'} • ★ {seller.valoracio_mitjana}</p>
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <span>{seller.ubicacio || 'Location unavailable'}</span>
+                        <span>•</span>
+                        <div className="flex items-center text-amber-400">
+                          <Star className="w-3 h-3 fill-current" />
+                          <span className="ml-1 text-gray-300">{seller.valoracio_mitjana}</span>
+                        </div>
+                      </div>
                     </div>
                  </div>
                  
@@ -196,7 +210,7 @@ export default function BookDetail() {
           {/* Actions */}
           <div className="mt-auto flex gap-4">
              <button 
-                onClick={() => !inCart && addToCart(book)}
+                onClick={handleAddToCart}
                 disabled={!book.disponible || inCart}
                 className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${
                   inCart 
@@ -216,7 +230,6 @@ export default function BookDetail() {
                  </>
                )}
              </button>
-             {/* Future feature: Add to Wishlist */}
           </div>
 
         </div>

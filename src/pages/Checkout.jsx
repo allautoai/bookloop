@@ -1,161 +1,118 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { supabase } from '../lib/supabase'
-import { CheckCircle2, Loader2, CreditCard, Truck } from 'lucide-react'
+import { CreditCard, Truck, ShieldCheck, CheckCircle, Loader2, ArrowLeft } from 'lucide-react'
+import { useToast } from '../context/ToastContext'
 
 export default function Checkout() {
-  const { cart, total, clearCart } = useCart()
+  const { cart, getCartTotal, clearCart } = useCart()
   const navigate = useNavigate()
+  const { addToast } = useToast()
+  
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [error, setError] = useState(null)
-  
-  const [formData, setFormData] = useState({
-    fullName: '',
-    address: '',
-    city: '',
-    postalCode: ''
-  })
+  const [address, setAddress] = useState('')
 
-  useEffect(() => {
-    if (cart.length === 0 && !success) {
-      navigate('/cart')
-    }
-  }, [cart, success, navigate])
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handlePlaceOrder = async (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Not authenticated')
 
-      const compradorId = session.user.id
-      const adrecaEnviament = `${formData.fullName}, ${formData.address}, ${formData.city}, ${formData.postalCode}`
+      const userId = session.user.id
 
-      // Process each book in the cart
-      for (const book of cart) {
+      for (const item of cart) {
         // 1. Create order
         const { error: orderError } = await supabase
           .from('orders')
           .insert({
-            comprador_id: compradorId,
-            book_id: book.id,
-            preu_total: book.preu,
-            adreca_enviament: adrecaEnviament,
+            comprador_id: userId,
+            book_id: item.id,
+            preu_total: item.preu,
+            adreca_enviament: address,
             estat: 'pendent'
           })
 
         if (orderError) throw orderError
 
-        // 2. Mark book as unavailable
+        // 2. Mark book as sold
         const { error: bookError } = await supabase
           .from('books')
           .update({ disponible: false })
-          .eq('id', book.id)
+          .eq('id', item.id)
 
         if (bookError) throw bookError
       }
 
       setSuccess(true)
+      addToast('Order placed successfully!', 'success')
       clearCart()
       
-      // Redirect home after 3 seconds
+      // Redirect after 3 seconds
       setTimeout(() => {
         navigate('/')
       }, 3000)
 
     } catch (err) {
       console.error(err)
-      setError(err.message)
+      addToast(err.message || 'Error processing your order.', 'error')
+    } finally {
       setLoading(false)
     }
   }
 
   if (success) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-24 text-center">
-        <div className="bg-emerald-500/10 inline-flex p-6 rounded-full mb-6">
-          <CheckCircle2 className="w-16 h-16 text-emerald-500" />
+      <div className="max-w-xl mx-auto px-6 py-24 text-center">
+        <div className="bg-[#2A364B] rounded-3xl p-12 border border-white/5 shadow-2xl flex flex-col items-center">
+          <div className="bg-emerald-500/20 p-6 rounded-full mb-8">
+            <CheckCircle className="w-20 h-20 text-emerald-500 animate-bounce" />
+          </div>
+          <h1 className="text-4xl font-black mb-4">Thank you for your purchase!</h1>
+          <p className="text-gray-400 mb-8">
+            Your order has been placed successfully. You will be redirected to the home page in a few seconds...
+          </p>
+          <Link to="/" className="text-[#3B82F6] font-bold hover:underline">
+            Go to Home now
+          </Link>
         </div>
-        <h1 className="text-4xl font-extrabold mb-4">Comanda realitzada amb èxit!</h1>
-        <p className="text-gray-400 mb-2">Thank you for your purchase. We've sent the details to your email.</p>
-        <p className="text-[#3B82F6] font-medium animate-pulse">Redirecting to home in 3 seconds...</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-extrabold mb-8">Checkout</h1>
+    <div className="max-w-4xl mx-auto px-6 py-12 min-h-screen">
+      <Link to="/cart" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8">
+        <ArrowLeft className="w-4 h-4" />
+        Back to Cart
+      </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         
-        {/* Shipping Form */}
+        {/* Checkout Form */}
         <div className="space-y-8">
-          <div className="bg-[#2A364B] p-8 rounded-3xl border border-white/5 shadow-xl">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-[#3B82F6]/10 p-2 rounded-lg">
+          <h1 className="text-3xl font-extrabold">Checkout</h1>
+          
+          <form onSubmit={handleCheckout} className="space-y-6">
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold flex items-center gap-2">
                 <Truck className="w-5 h-5 text-[#3B82F6]" />
-              </div>
-              <h2 className="text-xl font-bold">Shipping Details</h2>
-            </div>
-
-            <form onSubmit={handlePlaceOrder} id="checkout-form" className="space-y-4">
+                Shipping Information
+              </h2>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Full Name</label>
-                <input
-                  type="text"
-                  name="fullName"
+                <label className="block text-sm font-medium text-gray-300">Delivery Address</label>
+                <textarea
                   required
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className="w-full bg-[#1A2332] border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring focus:ring-[#3B82F6]/50 focus:border-[#3B82F6]"
-                  placeholder="Jane Doe"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Street name, number, apartment, city, zip code..."
+                  rows="3"
+                  className="w-full bg-[#2A364B] border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring focus:ring-[#3B82F6]/50 focus:border-[#3B82F6] transition-all resize-none"
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Address</label>
-                <input
-                  type="text"
-                  name="address"
-                  required
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full bg-[#1A2332] border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring focus:ring-[#3B82F6]/50 focus:border-[#3B82F6]"
-                  placeholder="Carrer de Mallorca, 123"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-300">City</label>
-                  <input
-                    type="text"
-                    name="city"
-                    required
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full bg-[#1A2332] border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring focus:ring-[#3B82F6]/50 focus:border-[#3B82F6]"
-                    placeholder="Barcelona"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-300">Postal Code</label>
-                  <input
-                    type="text"
-                    name="postalCode"
-                    required
-                    value={formData.postalCode}
                     onChange={handleInputChange}
                     className="w-full bg-[#1A2332] border border-white/10 rounded-xl px-4 py-3 outline-none focus:ring focus:ring-[#3B82F6]/50 focus:border-[#3B82F6]"
                     placeholder="08001"

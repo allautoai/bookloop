@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Loader2 } from 'lucide-react'
+import { useToast } from '../context/ToastContext'
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true)
@@ -13,6 +14,7 @@ export default function Login() {
   
   const navigate = useNavigate()
   const location = useLocation()
+  const { addToast } = useToast()
   const from = location.state?.from?.pathname || '/'
 
   const handleAuth = async (e) => {
@@ -27,11 +29,17 @@ export default function Login() {
           password,
         })
         if (error) throw error
+        addToast('Welcome back!', 'success')
         navigate(from, { replace: true })
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              nom: name || email.split('@')[0]
+            }
+          }
         })
         if (error) throw error
         
@@ -44,17 +52,19 @@ export default function Login() {
           if (insertError) console.error("Error creating user profile", insertError)
         }
         
+        addToast('Account created successfully!', 'success')
         navigate(from, { replace: true })
       }
     } catch (err) {
       setError(err.message)
+      addToast(err.message, 'error')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-[#2A364B] rounded-3xl border border-white/5 p-8 shadow-2xl">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6 pointer-events-auto cursor-pointer">
@@ -119,8 +129,9 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-3 rounded-xl transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-3 rounded-xl transition-all mt-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
           </button>
         </form>

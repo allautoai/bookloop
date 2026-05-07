@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { BookOpen, Search, ShoppingBag, User, LogOut, Plus, ChevronDown, ShoppingCart } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
+import { useToast } from '../context/ToastContext'
 
 export default function Navbar() {
   const [user, setUser] = useState(null)
@@ -10,6 +11,8 @@ export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const { cart } = useCart()
+  const { addToast } = useToast()
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -23,8 +26,19 @@ export default function Navbar() {
     return () => subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    addToast('Logged out successfully', 'info')
     navigate('/')
   }
 
@@ -32,6 +46,7 @@ export default function Navbar() {
     e.preventDefault()
     if (searchTerm.trim()) {
       navigate(`/books?search=${encodeURIComponent(searchTerm)}`)
+      setSearchTerm('')
     }
   }
 
@@ -80,13 +95,17 @@ export default function Navbar() {
             </Link>
 
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-2 hover:text-white transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs">
-                    {user.email[0].toUpperCase()}
+                  <div className="w-8 h-8 rounded-full bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs overflow-hidden">
+                    {user.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      user.email[0].toUpperCase()
+                    )}
                   </div>
                   <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>

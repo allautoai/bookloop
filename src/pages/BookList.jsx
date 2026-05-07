@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import BookCard from '../components/BookCard'
 import FilterBar from '../components/FilterBar'
-import { Search, BookOpen } from 'lucide-react'
+import { Search, BookOpen, Loader2 } from 'lucide-react'
 
 export default function BookList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -18,14 +18,14 @@ export default function BookList() {
     category: '',
     language: '',
     condition: '',
-    maxPrice: 50,
+    maxPrice: 100,
     search: searchParams.get('search') || ''
   })
 
   // Watch searchParams for changes from Navbar
   useEffect(() => {
     const search = searchParams.get('search')
-    if (search !== null && search !== filters.search) {
+    if (search !== null) {
       setFilters(prev => ({ ...prev, search }))
     }
   }, [searchParams])
@@ -55,44 +55,44 @@ export default function BookList() {
     const fetchBooks = async () => {
       setLoading(true)
       
-      let query = supabase
-        .from('books')
-        .select('*')
-        .eq('disponible', true)
+      try {
+        let query = supabase
+          .from('books')
+          .select('*')
+          .eq('disponible', true)
+          
+        if (filters.category) {
+          query = query.eq('categoria_id', filters.category)
+        }
         
-      if (filters.category) {
-        query = query.eq('categoria_id', filters.category)
-      }
-      
-      if (filters.language) {
-        query = query.eq('idioma', filters.language)
-      }
-      
-      if (filters.condition) {
-        query = query.eq('estat', filters.condition)
-      }
+        if (filters.language) {
+          query = query.eq('idioma', filters.language)
+        }
+        
+        if (filters.condition) {
+          query = query.eq('estat', filters.condition)
+        }
 
-      if (filters.maxPrice) {
-        query = query.lte('preu', filters.maxPrice)
-      }
+        if (filters.maxPrice) {
+          query = query.lte('preu', filters.maxPrice)
+        }
 
-      if (filters.search) {
-        // Simple search in V1 matching either titol or autor
-        query = query.or(`titol.ilike.%${filters.search}%,autor.ilike.%${filters.search}%`)
-      }
+        if (filters.search) {
+          query = query.or(`titol.ilike.%${filters.search}%,autor.ilike.%${filters.search}%`)
+        }
 
-      const { data, fetchError } = await query.order('created_at', { ascending: false })
-      
-      if (fetchError) {
-        setError(fetchError.message)
-      } else if (data) {
-        setBooks(data)
+        const { data, fetchError } = await query.order('created_at', { ascending: false })
+        
+        if (fetchError) throw fetchError
+        setBooks(data || [])
         setError(null)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
-    // Debounce slightly to avoid slamming Supabase while typing/sliding
     const timer = setTimeout(() => {
       fetchBooks()
     }, 300)
@@ -101,17 +101,17 @@ export default function BookList() {
   }, [filters])
 
   const handleSearchChange = (e) => {
-    setFilters(prev => ({ ...prev, search: e.target.value }))
-    // Optionally update URL
-    if (e.target.value) {
-      setSearchParams({ search: e.target.value })
+    const val = e.target.value
+    setFilters(prev => ({ ...prev, search: val }))
+    if (val) {
+      setSearchParams({ search: val })
     } else {
       setSearchParams({})
     }
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-7xl mx-auto px-6 py-8 min-h-screen">
       
       {/* Page Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -163,13 +163,16 @@ export default function BookList() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-[#2A364B]/50 rounded-2xl border border-white/5">
-              <BookOpen className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-white mb-1">No books found</h3>
-              <p className="text-gray-400">Try adjusting your filters or search term.</p>
+            <div className="text-center py-24 bg-[#2A364B]/50 rounded-3xl border border-white/5">
+              <BookOpen className="h-16 w-16 text-gray-500 mx-auto mb-6 opacity-20" />
+              <h3 className="text-xl font-bold text-white mb-2">No results found</h3>
+              <p className="text-gray-400 max-w-sm mx-auto">We couldn't find any books matching your criteria. Try adjusting your filters or search term.</p>
               <button 
-                onClick={() => setFilters({ category: '', language: '', condition: '', maxPrice: 50, search: '' })}
-                className="mt-4 text-[#3B82F6] hover:underline"
+                onClick={() => {
+                  setFilters({ category: '', language: '', condition: '', maxPrice: 100, search: '' })
+                  setSearchParams({})
+                }}
+                className="mt-8 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-6 py-2 rounded-xl font-bold transition-all"
               >
                 Clear all filters
               </button>

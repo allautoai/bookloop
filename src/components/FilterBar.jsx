@@ -5,34 +5,34 @@ export default function FilterBar({ filters, setFilters, categories }) {
   }
 
   const conditions = [
-    { value: '', label: 'Tots els estats' },
-    { value: 'nou', label: 'Nou' },
-    { value: 'com_a_nou', label: 'Com a nou' },
-    { value: 'bon_estat', label: 'Bon estat' },
+    { value: '', label: 'All Conditions' },
+    { value: 'nou', label: 'New' },
+    { value: 'com_a_nou', label: 'Like New' },
+    { value: 'bon_estat', label: 'Good Condition' },
     { value: 'acceptable', label: 'Acceptable' }
   ]
 
   const languages = [
-    { value: '', label: 'Tots els idiomes' },
-    { value: 'Català', label: 'Català' },
-    { value: 'Castellà', label: 'Castellà' },
-    { value: 'Anglès', label: 'Anglès' }
+    { value: '', label: 'All Languages' },
+    { value: 'English', label: 'English' },
+    { value: 'Catalan', label: 'Catalan' },
+    { value: 'Spanish', label: 'Spanish' }
   ]
 
   return (
     <div className="bg-[#2A364B] p-4 rounded-xl border border-white/5 space-y-4 sticky top-24">
-      <h3 className="font-bold text-lg mb-2 border-b border-white/5 pb-2">Filtres</h3>
+      <h3 className="font-bold text-lg mb-2 border-b border-white/5 pb-2">Filters</h3>
       
       {/* Categories */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300">Categoria</label>
+        <label className="block text-sm font-medium text-gray-300">Category</label>
         <select 
           name="category" 
           value={filters.category} 
           onChange={handleChange}
           className="w-full bg-[#1A2332] border border-white/10 rounded-lg p-2 text-sm focus:ring focus:ring-[#3B82F6]/50 focus:border-[#3B82F6] outline-none"
         >
-          <option value="">Totes les categories</option>
+          <option value="">All Categories</option>
           {categories.map(cat => (
             <option key={cat.id} value={cat.id}>{cat.nom}</option>
           ))}
@@ -41,7 +41,7 @@ export default function FilterBar({ filters, setFilters, categories }) {
 
       {/* Language */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300">Idioma</label>
+        <label className="block text-sm font-medium text-gray-300">Language</label>
         <select 
           name="language" 
           value={filters.language} 
@@ -56,7 +56,7 @@ export default function FilterBar({ filters, setFilters, categories }) {
 
       {/* Condition */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300">Estat</label>
+        <label className="block text-sm font-medium text-gray-300">Condition</label>
         <div className="flex flex-col gap-2 mt-1">
           {conditions.map(cond => (
             <label key={cond.value || 'all'} className="flex items-center gap-2 cursor-pointer group">
@@ -74,15 +74,15 @@ export default function FilterBar({ filters, setFilters, categories }) {
         </div>
       </div>
 
-      {/* Price Range (simplified for V1) */}
+      {/* Price Range */}
       <div className="space-y-2 pt-2 border-t border-white/5">
-        <label className="block text-sm font-medium text-gray-300">Preu Màxim</label>
+        <label className="block text-sm font-medium text-gray-300">Max Price</label>
         <div className="flex items-center justify-between">
           <input 
             type="range" 
             name="maxPrice" 
             min="0" 
-            max="50" 
+            max="100" 
             step="1"
             value={filters.maxPrice} 
             onChange={handleChange}
@@ -90,7 +90,7 @@ export default function FilterBar({ filters, setFilters, categories }) {
           />
         </div>
         <div className="text-right text-xs text-gray-400 font-mono">
-          Fins a {filters.maxPrice}€
+          Up to {filters.maxPrice}€
         </div>
       </div>
 

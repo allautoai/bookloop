@@ -1,101 +1,118 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react'
+import { Trash2, ShoppingBag, ArrowLeft, ArrowRight, BookOpen } from 'lucide-react'
+import { useToast } from '../context/ToastContext'
 
 export default function Cart() {
-  const { cart, removeFromCart, total } = useCart()
+  const { cart, removeFromCart, getCartTotal, clearCart } = useCart()
+  const { addToast } = useToast()
   const navigate = useNavigate()
 
-  const formattedTotal = total.toLocaleString('ca-ES', {
-    style: 'currency',
-    currency: 'EUR'
-  })
+  const handleRemove = (id) => {
+    removeFromCart(id)
+    addToast('Item removed from cart', 'info')
+  }
 
   if (cart.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-20 text-center">
-        <div className="bg-[#2A364B] inline-flex p-6 rounded-full mb-6">
-          <ShoppingBag className="w-12 h-12 text-gray-500" />
+      <div className="max-w-4xl mx-auto px-6 py-24 text-center">
+        <div className="bg-[#2A364B] rounded-3xl p-12 border border-white/5 shadow-xl">
+          <ShoppingBag className="w-16 h-16 text-gray-600 mx-auto mb-6 opacity-20" />
+          <h2 className="text-3xl font-extrabold mb-4">Your cart is empty</h2>
+          <p className="text-gray-400 mb-10 max-w-sm mx-auto">
+            Looks like you haven't added anything to your cart yet. Discover amazing pre-loved books in our catalog.
+          </p>
+          <Link 
+            to="/books" 
+            className="inline-flex items-center gap-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20"
+          >
+            <BookOpen className="w-5 h-5" />
+            Browse Catalog
+          </Link>
         </div>
-        <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
-        <p className="text-gray-400 mb-8 max-w-md mx-auto">
-          Looks like you haven't added any books to your cart yet. Explore our catalog to find your next favorite read!
-        </p>
-        <Link 
-          to="/books" 
-          className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-8 py-4 rounded-xl font-bold transition-all inline-flex items-center gap-2"
-        >
-          Explore Catalog
-          <ArrowRight className="w-5 h-5" />
-        </Link>
       </div>
     )
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-extrabold mb-8">Your Shopping Cart</h1>
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-extrabold">Shopping Cart</h1>
+        <button 
+          onClick={() => {
+            clearCart()
+            addToast('Cart cleared', 'info')
+          }}
+          className="text-sm text-gray-500 hover:text-red-400 transition-colors"
+        >
+          Clear Cart
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
-        {/* Item List */}
+        {/* Items List */}
         <div className="lg:col-span-2 space-y-4">
           {cart.map((item) => (
-            <div key={item.id} className="bg-[#2A364B] border border-white/5 p-4 rounded-2xl flex gap-4 items-center">
-              <div className="w-20 h-28 bg-[#1A2332] rounded-lg overflow-hidden shrink-0">
-                {item.foto_url ? (
-                  <img src={item.foto_url} alt={item.titol} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">No image</div>
-                )}
+            <div key={item.id} className="bg-[#2A364B] rounded-2xl p-4 flex gap-4 border border-white/5 hover:border-white/10 transition-colors group">
+              <div className="w-20 aspect-[3/4] rounded-lg overflow-hidden shrink-0 bg-[#1A2332]">
+                <img src={item.foto_url} alt={item.titol} className="w-full h-full object-cover" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg truncate">{item.titol}</h3>
-                <p className="text-sm text-gray-400 truncate">{item.autor}</p>
-                <div className="mt-2 font-bold text-[#3B82F6]">
-                  {Number(item.preu).toLocaleString('ca-ES', { style: 'currency', currency: 'EUR' })}
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-lg line-clamp-1">{item.titol}</h3>
+                  <p className="text-sm text-gray-400">{item.autor}</p>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="font-bold text-[#3B82F6]">{Number(item.preu).toFixed(2)}€</span>
+                  <button 
+                    onClick={() => handleRemove(item.id)}
+                    className="text-gray-500 hover:text-red-400 p-2 rounded-lg hover:bg-white/5 transition-all"
+                    title="Remove item"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <button 
-                onClick={() => removeFromCart(item.id)}
-                className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
             </div>
           ))}
+          
+          <Link to="/books" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mt-4">
+            <ArrowLeft className="w-4 h-4" />
+            Continue Shopping
+          </Link>
         </div>
 
-        {/* Summary Card */}
+        {/* Summary */}
         <div className="lg:col-span-1">
-          <div className="bg-[#2A364B] border border-white/5 p-6 rounded-2xl sticky top-24 shadow-xl">
-            <h3 className="text-xl font-bold mb-6">Order Summary</h3>
+          <div className="bg-[#2A364B] rounded-3xl p-6 border border-white/5 shadow-xl sticky top-28">
+            <h2 className="text-xl font-bold mb-6">Order Summary</h2>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 mb-8">
               <div className="flex justify-between text-gray-400">
-                <span>Books ({cart.length})</span>
-                <span>{formattedTotal}</span>
+                <span>Items ({cart.length})</span>
+                <span>{getCartTotal().toFixed(2)}€</span>
               </div>
               <div className="flex justify-between text-gray-400">
                 <span>Shipping</span>
-                <span className="text-emerald-400">Free</span>
+                <span className="text-emerald-400 font-medium">Free</span>
               </div>
-              <div className="pt-4 border-t border-white/10 flex justify-between font-bold text-xl">
-                <span>Total</span>
-                <span>{formattedTotal}</span>
+              <div className="pt-4 border-t border-white/10 flex justify-between items-end">
+                <span className="font-bold text-lg">Total</span>
+                <span className="text-2xl font-black text-white">{getCartTotal().toFixed(2)}€</span>
               </div>
             </div>
 
             <button 
               onClick={() => navigate('/checkout')}
-              className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+              className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
             >
-              Checkout Now
+              Secure Checkout
               <ArrowRight className="w-5 h-5" />
             </button>
             
-            <p className="text-center text-xs text-gray-500 mt-4">
-              Secure payment via BookLoop Pay
+            <p className="text-[10px] text-gray-500 text-center mt-4 uppercase tracking-widest font-bold">
+              Secure Payments • Money Back Guarantee
             </p>
           </div>
         </div>

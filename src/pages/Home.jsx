@@ -50,7 +50,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-[#3B82F6] font-medium mb-8">
             <BookOpen className="w-4 h-4" />
-            V2 Marketplace is Live
+            V3 Marketplace is Live
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
             Give books a <br/>
