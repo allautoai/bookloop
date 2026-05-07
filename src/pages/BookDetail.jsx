@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, User, MessageCircle, ShoppingCart } from 'lucide-react'
+import { ArrowLeft, User, MessageCircle, ShoppingCart, Check } from 'lucide-react'
+import { useCart } from '../context/CartContext'
 
 export default function BookDetail() {
   const { id } = useParams()
@@ -11,6 +12,7 @@ export default function BookDetail() {
   const [seller, setSeller] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { addToCart, isInCart } = useCart()
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -109,6 +111,8 @@ export default function BookDetail() {
     currency: 'EUR'
   })
 
+  const inCart = isInCart(book.id)
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       <Link to="/books" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8">
@@ -191,9 +195,26 @@ export default function BookDetail() {
 
           {/* Actions */}
           <div className="mt-auto flex gap-4">
-             <button className="flex-1 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-6 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
-               <ShoppingCart className="w-5 h-5" />
-               Add to Cart
+             <button 
+                onClick={() => !inCart && addToCart(book)}
+                disabled={!book.disponible || inCart}
+                className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${
+                  inCart 
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 shadow-none' 
+                  : 'bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-blue-500/20'
+                } disabled:opacity-50`}
+             >
+               {inCart ? (
+                 <>
+                   <Check className="w-5 h-5" />
+                   In Cart
+                 </>
+               ) : (
+                 <>
+                   <ShoppingCart className="w-5 h-5" />
+                   Add to Cart
+                 </>
+               )}
              </button>
              {/* Future feature: Add to Wishlist */}
           </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { BookOpen, ArrowRight } from 'lucide-react'
+import { BookOpen, ArrowRight, Plus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import BookCard from '../components/BookCard'
 
@@ -50,7 +50,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-[#3B82F6] font-medium mb-8">
             <BookOpen className="w-4 h-4" />
-            V1 Marketplace is Live
+            V2 Marketplace is Live
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
             Give books a <br/>
@@ -70,7 +70,7 @@ export default function Home() {
               <ArrowRight className="w-5 h-5" />
             </button>
             <button 
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/publish')}
               className="bg-[#2A364B] hover:bg-[#34425A] text-white px-8 py-4 rounded-xl font-bold transition-all border border-white/10 flex items-center justify-center"
             >
               Start Selling
@@ -129,6 +129,15 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={() => navigate('/publish')}
+        className="fixed bottom-8 right-8 bg-[#3B82F6] hover:bg-[#2563EB] text-white p-4 rounded-full shadow-2xl shadow-blue-500/40 hover:scale-110 active:scale-95 transition-all z-40 group"
+        title="Publish a book"
+      >
+        <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+      </button>
     </div>
   )
 }

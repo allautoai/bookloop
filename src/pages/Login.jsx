@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { BookOpen } from 'lucide-react'
 
@@ -12,6 +12,8 @@ export default function Login() {
   const [error, setError] = useState(null)
   
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/'
 
   const handleAuth = async (e) => {
     e.preventDefault()
@@ -25,7 +27,7 @@ export default function Login() {
           password,
         })
         if (error) throw error
-        navigate('/')
+        navigate(from, { replace: true })
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -33,9 +35,6 @@ export default function Login() {
         })
         if (error) throw error
         
-        // After signup, we should technically insert exactly to our public.users 
-        // table using the newly created ID, but usually that is done via 
-        // a Supabase trigger. For V1 frontend simulation we'll try an insert if user was created.
         if (data?.user?.id) {
           const { error: insertError } = await supabase.from('users').insert({
             id: data.user.id,
@@ -45,7 +44,7 @@ export default function Login() {
           if (insertError) console.error("Error creating user profile", insertError)
         }
         
-        navigate('/')
+        navigate(from, { replace: true })
       }
     } catch (err) {
       setError(err.message)
