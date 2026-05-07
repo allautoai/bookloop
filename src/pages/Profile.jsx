@@ -57,13 +57,16 @@ export default function Profile() {
 
       // 3. Fetch Sold Books Orders (where user is the seller)
       // We need to join books to check venedor_id
-      const { data: sales } = await supabase
+      const { data: sales, error: salesError } = await supabase
         .from('orders')
-        .select('*, books(*), users!comprador_id(nom, email, avatar_url)')
+        .select('*, books!inner(*), users!comprador_id(nom, email, avatar_url)')
         .eq('books.venedor_id', userId)
         .order('created_at', { ascending: false })
       
-      // Filter out null books (shouldn't happen but Supabase select might return them if not joined correctly)
+      if (salesError) {
+        console.error('Sales fetch error:', salesError)
+      }
+      
       setSoldBooksOrders((sales || []).filter(o => o.books))
 
       // 4. Fetch My Orders (purchases where user is the buyer)
